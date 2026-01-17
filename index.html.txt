@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamel Trophy English Training</title>
+    <style>
+        :root { --primary: #2563eb; --dark: #1e293b; --light: #f4f6f8; --success: #16a34a; --error: #dc2626; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--light); margin: 0; color: #333; }
+        header { background: var(--dark); color: white; padding: 30px; text-align: center; }
+        .container { max-width: 800px; margin: -30px auto 50px; padding: 0 20px; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+        .btn { display: inline-block; background: var(--primary); color: white; padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin: 10px 5px; transition: 0.3s; }
+        .btn:hover { opacity: 0.9; transform: translateY(-2px); }
+        .btn-green { background: var(--success); }
+        .option-label { display: block; padding: 15px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; }
+        .option-label:hover { border-color: var(--primary); background: #f8fafc; }
+        input[type="text"] { width: 100%; padding: 15px; font-size: 18px; border: 2px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; margin-top: 10px; }
+        .hidden { display: none; }
+        .progress-bar { height: 10px; background: #e2e8f0; border-radius: 5px; margin-bottom: 20px; }
+        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: 0.4s; }
+        .review-item { padding: 15px; border-left: 5px solid #ccc; margin-bottom: 10px; border-radius: 4px; }
+        .correct { border-color: var(--success); background: #f0fdf4; }
+        .wrong { border-color: var(--error); background: #fef2f2; }
+        .section-tag { background: #e2e8f0; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Gamel Trophy English Platform</h1>
+    <p>Project: Supporting GEII Students with AI-Generated Exercises</p>
+</header>
+
+<div class="container">
+    <div id="home" class="card" style="text-align: center;">
+        <h2>Welcome to the App</h2>
+        <p>This platform uses 100 technical questions about the Gamel Trophy competition. Select your practice mode:</p>
+        <div style="margin-top: 30px;">
+            <button class="btn" onclick="startQuiz('qcm')">Exercise 1: TOEIC QCM</button>
+            <button class="btn btn-green" onclick="startQuiz('translation')">Exercise 2: Translation</button>
+        </div>
+        <p style="font-size: 0.8em; color: #64748b; margin-top: 20px;">15 random questions per session.</p>
+    </div>
+
+    <div id="quiz" class="hidden">
+        <div class="card">
+            <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+            <div style="display: flex; justify-content: space-between;">
+                <span id="qCounter" style="font-weight: bold;"></span>
+                <span id="sectionTag" class="section-tag"></span>
+            </div>
+            <div id="quizContent"></div>
+            <br>
+            <button class="btn" onclick="submitAnswer()">Next Question</button>
+        </div>
+    </div>
+
+    <div id="result" class="hidden">
+        <div class="card">
+            <h2>Results Summary</h2>
+            <div style="font-size: 32px; font-weight: bold; color: var(--primary);" id="scoreDisplay"></div>
+            <p id="worstSectionDisplay"></p>
+            <hr>
+            <h3>Answer Review</h3>
+            <div id="reviewBox" style="max-height: 400px; overflow-y: auto;"></div>
+            <br>
+            <button class="btn" onclick="location.reload()">Return to Menu</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const allQuestions = [
+    // VERBAL GROUP (25)
+    {section:"Verbal Group",q:"If the robot ____ too fast, it may lose the line.",options:["go","goes","went","gone"],a:1, trans:"goes", fr:"va"},
+    {section:"Verbal Group",q:"We usually ____ the sensors before the competition.",options:["test","testing","tested","tests"],a:0, trans:"test", fr:"testons"},
+    {section:"Verbal Group",q:"The robot ____ following the line right now.",options:["is","are","was","were"],a:0, trans:"is", fr:"est en train de"},
+    {section:"Verbal Group",q:"Since this morning, the robot ____ correctly.",options:["works","worked","has worked","is working"],a:2, trans:"has worked", fr:"a travaillé"},
+    {section:"Verbal Group",q:"If the battery is empty, the robot ____ stop.",options:["will","would","has","had"],a:0, trans:"will", fr:"va (futur)"},
+    {section:"Verbal Group",q:"The team ____ finished assembling the robot.",options:["have","has","is","are"],a:1, trans:"has", fr:"a (auxiliaire)"},
+    {section:"Verbal Group",q:"While the robot ____ the track, the timer started.",options:["follows","was following","is following","has followed"],a:1, trans:"was following", fr:"suivait"},
+    {section:"Verbal Group",q:"We ____ the code yesterday.",options:["write","wrote","written","writing"],a:1, trans:"wrote", fr:"avons écrit"},
+    {section:"Verbal Group",q:"The robot must ____ the line precisely.",options:["follow","follows","following","followed"],a:0, trans:"follow", fr:"suivre"},
+    {section:"Verbal Group",q:"He ____ testing the motors when the issue appeared.",options:["is","was","has","had"],a:1, trans:"was", fr:"était en train de"},
+    {section:"Verbal Group",q:"They ____ already calibrated the sensors.",options:["have","has","are","were"],a:0, trans:"have", fr:"ont"},
+    {section:"Verbal Group",q:"The robot ____ programmed by the team.",options:["is","was","has","had"],a:1, trans:"was", fr:"a été"},
+    {section:"Verbal Group",q:"We ____ improve the speed next time.",options:["will","would","did","had"],a:0, trans:"will", fr:"allons"},
+    {section:"Verbal Group",q:"The robot ____ when it reached the finish line.",options:["stop","stops","stopped","stopping"],a:2, trans:"stopped", fr:"s'est arrêté"},
+    {section:"Verbal Group",q:"She ____ adjusting the code all night.",options:["is","was","has","had"],a:1, trans:"was", fr:"était"},
+    {section:"Verbal Group",q:"If the sensor fails, the robot ____ not detect the line.",options:["does","will","has","had"],a:1, trans:"will", fr:"ne va pas (futur)"},
+    {section:"Verbal Group",q:"The team ____ practicing every week.",options:["is","are","was","were"],a:0, trans:"is", fr:"est"},
+    {section:"Verbal Group",q:"The robot ____ built last semester.",options:["is","was","has","had"],a:1, trans:"was", fr:"a été"},
+    {section:"Verbal Group",q:"He ____ checking the voltage.",options:["is","are","was","were"],a:0, trans:"is", fr:"est en train de"},
+    {section:"Verbal Group",q:"We ____ the competition next week.",options:["start","starts","will start","started"],a:2, trans:"will start", fr:"commencerons"},
+    {section:"Verbal Group",q:"The robot ____ never failed before.",options:["has","have","is","was"],a:0, trans:"has", fr:"n'a"},
+    {section:"Verbal Group",q:"She ____ already tested the circuit.",options:["has","have","is","was"],a:0, trans:"has", fr:"a"},
+    {section:"Verbal Group",q:"They ____ working on the project.",options:["continue","continues","continued","continuing"],a:0, trans:"continue", fr:"continuent"},
+    {section:"Verbal Group",q:"The robot ____ when the sensor detected the line.",options:["turn","turns","turned","turning"],a:2, trans:"turned", fr:"a tourné"},
+    {section:"Verbal Group",q:"If we hurry, we ____ finish on time.",options:["will","would","did","had"],a:0, trans:"will", fr:"allons"},
+
+    // NOUN GROUP (25)
+    {section:"Noun Group",q:"The robot is ____ useful machine.",options:["a","an","the","Ø"],a:0, trans:"a", fr:"une"},
+    {section:"Noun Group",q:"This is the ____ sensor on the robot.",options:["better","best","more good","goodest"],a:1, trans:"best", fr:"meilleur"},
+    {section:"Noun Group",q:"He bought ____ new motor.",options:["a","an","the","Ø"],a:0, trans:"a", fr:"un"},
+    {section:"Noun Group",q:"The robot needs ____ maintenance.",options:["a","an","the","Ø"],a:3, trans:"maintenance", fr:"de la"},
+    {section:"Noun Group",q:"This is ____ fastest robot in the competition.",options:["a","an","the","Ø"],a:2, trans:"the", fr:"le"},
+    {section:"Noun Group",q:"She has ____ experience in robotics.",options:["a","an","the","Ø"],a:3, trans:"experience", fr:"de l'"},
+    {section:"Noun Group",q:"The team fixed ____ broken wire.",options:["a","an","the","Ø"],a:2, trans:"the", fr:"le"},
+    {section:"Noun Group",q:"This robot has ____ powerful motor.",options:["a","an","the","Ø"],a:0, trans:"a", fr:"un"},
+    {section:"Noun Group",q:"They tested ____ sensors.",options:["a","an","the","Ø"],a:3, trans:"sensors", fr:"les"},
+    {section:"Noun Group",q:"The robot is ____ more efficient than before.",options:["much","many","more","most"],a:0, trans:"much", fr:"beaucoup"},
+    {section:"Noun Group",q:"He found ____ solution to the problem.",options:["a","an","the","Ø"],a:0, trans:"a", fr:"une"},
+    {section:"Noun Group",q:"This is ____ difficult task.",options:["a","an","the","Ø"],a:0, trans:"a", fr:"une"},
+    {section:"Noun Group",q:"She made ____ improvements.",options:["a","an","the","Ø"],a:3, trans:"improvements", fr:"des"},
+    {section:"Noun Group",q:"The robot uses ____ electricity.",options:["few","little","many","several"],a:1, trans:"little", fr:"peu d'"},
+    {section:"Noun Group",q:"There are ____ wires connected.",options:["much","little","many","less"],a:2, trans:"many", fr:"beaucoup de"},
+    {section:"Noun Group",q:"This is ____ most reliable sensor.",options:["a","an","the","Ø"],a:2, trans:"the", fr:"le"},
+    {section:"Noun Group",q:"He has ____ better idea.",options:["a","an","the","Ø"],a:0, trans:"a", fr:"une"},
+    {section:"Noun Group",q:"The robot completed ____ lap.",options:["a","an","the","Ø"],a:0, trans:"a", fr:"un"},
+    {section:"Noun Group",q:"She adjusted ____ speed.",options:["a","an","the","Ø"],a:2, trans:"the", fr:"la"},
+    {section:"Noun Group",q:"They used ____ equipment.",options:["a","an","the","Ø"],a:3, trans:"equipment", fr:"de l'"},
+    {section:"Noun Group",q:"This is ____ older model.",options:["a","an","the","Ø"],a:1, trans:"an", fr:"un"},
+    {section:"Noun Group",q:"The robot has ____ unique design.",options:["a","an","the","Ø"],a:0, trans:"a", fr:"un"},
+    {section:"Noun Group",q:"He repaired ____ motor.",options:["a","an","the","Ø"],a:2, trans:"the", fr:"le"},
+    {section:"Noun Group",q:"She bought ____ expensive component.",options:["a","an","the","Ø"],a:1, trans:"an", fr:"un"},
+    {section:"Noun Group",q:"They need ____ information.",options:["a","an","the","Ø"],a:3, trans:"information", fr:"des"},
+
+    // SYNTAX (25)
+    {section:"Syntax",q:"How long ____ you been working on this robot?",options:["have","has","do","did"],a:0, trans:"have", fr:"avez"},
+    {section:"Syntax",q:"Choose the correct sentence.",options:["He don't like coding.","He doesn't like coding.","He isn't like coding.","He not like coding."],a:1, trans:"doesn't", fr:"n'aime pas"},
+    {section:"Syntax",q:"Hardly ____ the race started when the robot stopped.",options:["had","has","did","was"],a:0, trans:"had", fr:"avait"},
+    {section:"Syntax",q:"It's high time you ____ the code.",options:["fix","fixed","have fixed","will fix"],a:1, trans:"fixed", fr:"répariez (subj.)"},
+    {section:"Syntax",q:"The robot, ____ was programmed yesterday, works well.",options:["who","which","what","that"],a:1, trans:"which", fr:"qui (objet)"},
+    {section:"Syntax",q:"No sooner ____ the test finished than the issue appeared.",options:["had","has","did","was"],a:0, trans:"had", fr:"avait"},
+    {section:"Syntax",q:"He asked me ____ I understood the code.",options:["that","if","what","which"],a:1, trans:"if", fr:"si"},
+    {section:"Syntax",q:"This is the robot ____ won the race.",options:["who","which","what","whose"],a:1, trans:"which", fr:"qui"},
+    {section:"Syntax",q:"She explained how ____ the sensors.",options:["calibrate","to calibrate","calibrating","calibrated"],a:1, trans:"to calibrate", fr:"comment calibrer"},
+    {section:"Syntax",q:"The robot stopped ____ the battery was empty.",options:["because","although","unless","while"],a:0, trans:"because", fr:"parce que"},
+    {section:"Syntax",q:"We tested the robot ____ it failed.",options:["until","unless","because","although"],a:0, trans:"until", fr:"jusqu'à ce que"},
+    {section:"Syntax",q:"He wonders ____ the robot will finish.",options:["that","if","what","which"],a:1, trans:"if", fr:"si"},
+    {section:"Syntax",q:"This is the track ____ the robot follows.",options:["where","which","who","whose"],a:1, trans:"which", fr:"que"},
+    {section:"Syntax",q:"She spoke ____ that everyone understood.",options:["so","such","too","very"],a:0, trans:"so", fr:"si (tellement)"},
+    {section:"Syntax",q:"The robot was programmed ____ the competition.",options:["before","during","since","until"],a:0, trans:"before", fr:"avant"},
+    {section:"Syntax",q:"He works harder ____ his teammates.",options:["than","that","as","like"],a:0, trans:"than", fr:"que"},
+    {section:"Syntax",q:"This code is ____ complex to understand.",options:["too","so","very","enough"],a:0, trans:"too", fr:"trop"},
+    {section:"Syntax",q:"She didn't know ____ to fix the issue.",options:["what","that","which","who"],a:0, trans:"what", fr:"quoi / comment"},
+    {section:"Syntax",q:"The robot is faster ____ expected.",options:["than","that","as","like"],a:0, trans:"than", fr:"que"},
+    {section:"Syntax",q:"He explained the problem ____ detail.",options:["in","on","at","with"],a:0, trans:"in", fr:"en"},
+    {section:"Syntax",q:"The robot finished the race ____ time.",options:["on","in","at","by"],a:0, trans:"on", fr:"à l'heure"},
+    {section:"Syntax",q:"She is responsible ____ the code.",options:["for","of","to","with"],a:0, trans:"for", fr:"de / pour"},
+    {section:"Syntax",q:"They decided ____ the design.",options:["change","to change","changing","changed"],a:1, trans:"to change", fr:"de changer"},
+    {section:"Syntax",q:"The robot failed ____ a sensor error.",options:["because of","although","unless","despite"],a:0, trans:"because of", fr:"à cause de"},
+    {section:"Syntax",q:"He checked the result ____ submitting it.",options:["before","after","during","since"],a:0, trans:"before", fr:"avant de"},
+
+    // LEXICON (25)
+    {section:"Lexicon",q:"The ____ leader of the team presented the robot.",options:["actual","current","nowadays","today"],a:1, trans:"current", fr:"actuel"},
+    {section:"Lexicon",q:"They decided to ____ a test.",options:["do","make","build","create"],a:1, trans:"make", fr:"faire"},
+    {section:"Lexicon",q:"The robot must ____ the line.",options:["follow","pursue","run","walk"],a:0, trans:"follow", fr:"suivre"},
+    {section:"Lexicon",q:"He wants to ____ up coding.",options:["give","give up","give in","give away"],a:1, trans:"give up", fr:"arrêter / abandonner"},
+    {section:"Lexicon",q:"The robot uses a ____ sensor.",options:["light","bright","luminous","shine"],a:0, trans:"light", fr:"lumière"},
+    {section:"Lexicon",q:"She ____ a mistake in the code.",options:["did","made","built","created"],a:1, trans:"made", fr:"a fait"},
+    {section:"Lexicon",q:"The competition was very ____.",options:["intense","intensive","intent","intention"],a:0, trans:"intense", fr:"intense"},
+    {section:"Lexicon",q:"The robot stopped ____.",options:["suddenly","sudden","suddenness","sadden"],a:0, trans:"suddenly", fr:"soudainement"},
+    {section:"Lexicon",q:"They fixed the problem ____.",options:["quickly","quick","quicker","quickness"],a:0, trans:"quickly", fr:"rapidement"},
+    {section:"Lexicon",q:"The robot is very ____.",options:["reliable","reliant","reliance","rely"],a:0, trans:"reliable", fr:"fiable"},
+    {section:"Lexicon",q:"He has a lot of ____ in robotics.",options:["experience","experiment","experiences","experimentation"],a:0, trans:"experience", fr:"expérience"},
+    {section:"Lexicon",q:"The robot is fully ____.",options:["functional","function","functioning","functioned"],a:0, trans:"functional", fr:"fonctionnel"},
+    {section:"Lexicon",q:"She ____ the instructions carefully.",options:["followed","follow","follows","following"],a:0, trans:"followed", fr:"a suivi"},
+    {section:"Lexicon",q:"The team reached the ____.",options:["goal","aim","target","end"],a:3, trans:"end", fr:"fin / but"},
+    {section:"Lexicon",q:"The robot needs regular ____.",options:["maintenance","maintain","maintained","maintaining"],a:0, trans:"maintenance", fr:"maintenance"},
+    {section:"Lexicon",q:"The sensor is very ____.",options:["accurate","accuracy","accurately","inaccurate"],a:0, trans:"accurate", fr:"précis"},
+    {section:"Lexicon",q:"They solved the problem ____.",options:["efficiently","efficient","efficiency","inefficient"],a:0, trans:"efficiently", fr:"efficacement"},
+    {section:"Lexicon",q:"The robot is ____ powered.",options:["battery","battery-powered","battery power","powered battery"],a:1, trans:"battery-powered", fr:"alimenté par batterie"},
+    {section:"Lexicon",q:"He showed great ____.",options:["skill","skilled","skilling","skills"],a:0, trans:"skill", fr:"compétence"},
+    {section:"Lexicon",q:"The robot performed ____.",options:["well","good","better","best"],a:0, trans:"well", fr:"bien"},
+    {section:"Lexicon",q:"They worked under ____.",options:["pressure","press","pressed","pressing"],a:0, trans:"pressure", fr:"pression"},
+    {section:"Lexicon",q:"The robot achieved ____ results.",options:["excellent","excellence","excellently","excel"],a:0, trans:"excellent", fr:"excellents"},
+    {section:"Lexicon",q:"She made a ____ decision.",options:["wise","wisdom","wisely","wiser"],a:0, trans:"wise", fr:"sage"},
+    {section:"Lexicon",q:"The robot showed great ____.",options:["precision","precise","precisely","imprecise"],a:0, trans:"precision", fr:"précision"},
+    {section:"Lexicon",q:"They won the competition ____.",options:["successfully","successful","success","succeed"],a:0, trans:"successfully", fr:"avec succès"}
+];
+
+let quizMode = '';
+let currentQuestions = [];
+let idx = 0;
+let userScore = 0;
+let records = [];
+let sectionFails = {};
+
+function startQuiz(mode) {
+    quizMode = mode;
+    currentQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, 15);
+    idx = 0; userScore = 0; records = [];
+    sectionFails = { "Verbal Group":0, "Noun Group":0, "Syntax":0, "Lexicon":0 };
+    document.getElementById("home").classList.add("hidden");
+    document.getElementById("quiz").classList.remove("hidden");
+    display();
+}
+
+function display() {
+    const q = currentQuestions[idx];
+    document.getElementById("qCounter").innerText = `Question ${idx + 1} / 15`;
+    document.getElementById("sectionTag").innerText = q.section;
+    document.getElementById("progressFill").style.width = ((idx / 15) * 100) + "%";
+    
+    let content = `<p style="font-size: 1.3em; margin: 25px 0;">${q.q}</p>`;
+    if (quizMode === 'qcm') {
+        q.options.forEach((opt, i) => {
+            content += `<label class="option-label"><input type="radio" name="choice" value="${i}"> ${opt}</label>`;
+        });
+    } else {
+        content += `<p style="color: #2563eb; font-weight: bold;">Translate: "${q.fr}"</p>
+                    <input type="text" id="userInput" placeholder="English word..." autocomplete="off">`;
+    }
+    document.getElementById("quizContent").innerHTML = content;
+    if(quizMode === 'translation') {
+        document.getElementById("userInput").focus();
+        document.getElementById("userInput").addEventListener("keypress", e => { if(e.key === "Enter") submitAnswer(); });
+    }
+}
+
+function submitAnswer() {
+    const q = currentQuestions[idx];
+    let isCorrect = false;
+    let userVal = "";
+    if (quizMode === 'qcm') {
+        const picked = document.querySelector('input[name="choice"]:checked');
+        if (!picked) return alert("Pick an answer!");
+        userVal = q.options[parseInt(picked.value)];
+        isCorrect = (parseInt(picked.value) === q.a);
+    } else {
+        userVal = document.getElementById("userInput").value.trim();
+        if (!userVal) return alert("Type something!");
+        isCorrect = (userVal.toLowerCase() === q.trans.toLowerCase());
+    }
+    if (isCorrect) userScore++;
+    else sectionFails[q.section]++;
+    records.push({ q: q.q, fr: q.fr, user: userVal, correct: q.trans, isOk: isCorrect });
+    idx++;
+    if (idx < 15) display();
+    else finish();
+}
+
+function finish() {
+    document.getElementById("quiz").classList.add("hidden");
+    document.getElementById("result").classList.remove("hidden");
+    document.getElementById("scoreDisplay").innerText = `Score: ${userScore} / 15`;
+    let worst = Object.keys(sectionFails).reduce((a, b) => sectionFails[a] > sectionFails[b] ? a : b);
+    document.getElementById("worstSectionDisplay").innerHTML = sectionFails[worst] > 0 ? 
+        `Weakest area: <strong>${worst}</strong>.` : "Perfect score!";
+    let review = "";
+    records.forEach((r, i) => {
+        review += `<div class="review-item ${r.isOk ? 'correct' : 'wrong'}">
+            <strong>${i+1}. ${r.q}</strong> (${r.fr})<br>
+            Your answer: ${r.user || '(empty)'} | Correct: <strong>${r.correct}</strong>
+        </div>`;
+    });
+    document.getElementById("reviewBox").innerHTML = review;
+}
+</script>
+</body>
+</html>
